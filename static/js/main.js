@@ -17,14 +17,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mobile nav toggle
   const navToggle = document.getElementById('navToggle');
   const mainNav = document.getElementById('mainNav');
+  const navBackdrop = document.getElementById('navBackdrop');
   if (navToggle && mainNav) {
-    navToggle.addEventListener('click', () => {
-      mainNav.classList.toggle('open');
-      navToggle.classList.toggle('open');
-    });
+    const setNav = (open) => {
+      mainNav.classList.toggle('open', open);
+      navToggle.classList.toggle('open', open);
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.classList.toggle('nav-open', open);   // stop the page scrolling behind the menu
+      if (navBackdrop) navBackdrop.classList.toggle('show', open);
+    };
+
+    navToggle.addEventListener('click', () => setNav(!mainNav.classList.contains('open')));
     mainNav.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => mainNav.classList.remove('open'));
+      link.addEventListener('click', () => setNav(false));
     });
+    if (navBackdrop) navBackdrop.addEventListener('click', () => setNav(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setNav(false);
+    });
+
+    // Rotating to landscape can cross the breakpoint — don't leave a stuck menu
+    const desktopMq = window.matchMedia('(min-width: 769px)');
+    const syncNav = (e) => { if (e.matches) setNav(false); };
+    if (desktopMq.addEventListener) desktopMq.addEventListener('change', syncNav);
+    else if (desktopMq.addListener) desktopMq.addListener(syncNav);
   }
 
   // Scroll reveal via IntersectionObserver
